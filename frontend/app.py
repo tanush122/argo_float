@@ -1,24 +1,7 @@
-import os
 import sqlite3
 import pandas as pd
 import streamlit as st
 import plotly.express as px
-
-# LLM via Ollama (OpenAI-compatible)
-from dotenv import load_dotenv
-from openai import OpenAI
-
-# Load environment and set Ollama host (default localhost)
-load_dotenv()
-OLLAMA_HOST = os.getenv("OLLAMA_HOST", "http://127.0.0.1:11434")
-
-# Create an OpenAI-compatible client pointing to Ollama
-# api_key is a placeholder; Ollama ignores auth
-client = OpenAI(
-    base_url=f"{OLLAMA_HOST}/v1",
-    api_key="ollama"
-)
-MODEL_NAME = os.getenv("OLLAMA_MODEL", "llama3")  # override in .env if desired
 
 DB_PATH = "data/floats.db"
 
@@ -205,26 +188,10 @@ if float_ids:
             else:
                 reply("Please use a format like: `where salinity > 36.5`.")
 
-        # 7) LLM fallback via Ollama
         else:
-            reply("Let me think…")
-            prompt_text = (
-                f"You are an expert on ARGO float data. "
-                f"The user asked: {query}. "
-                f"Float ID: {chosen}. Provide a concise answer based on the data. "
-                f"Do not make up values."
-            )
-            try:
-                res = client.chat.completions.create(
-                    model=MODEL_NAME,
-                    messages=[{"role": "system", "content": prompt_text}],
-                    temperature=0.0,
-                    max_tokens=150,
-                )
-                answer = res.choices[0].message.content.strip()
-                reply(answer)
-            except Exception as e:
-                reply(f"Error contacting local LLM: {e}")
+            reply("Sorry, I don't understand. Try: "
+                  "`How many profiles?`, `Latest profile?`, `Max temperature`, "
+                  "`Min salinity`, `MLD summary`, `Where salinity > 36.5`.")
 
         conn.close()
 
